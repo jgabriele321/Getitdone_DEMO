@@ -46,7 +46,7 @@ COPY env.example .env.example
 
 # Create data directory for SQLite and set permissions
 RUN mkdir -p /app/data && \
-    chmod +x /app/app && \
+    chmod +x app && \
     chown -R appuser:appuser /app
 
 # Use the non-root user
