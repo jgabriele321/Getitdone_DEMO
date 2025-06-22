@@ -44,11 +44,10 @@ COPY --from=builder /build/app .
 # Copy the environment example file
 COPY env.example .env.example
 
-# Create data directory for SQLite
-RUN mkdir -p /app/data && chown -R appuser:appuser /app
-
-# Set ownership
-RUN chown -R appuser:appuser /app
+# Create data directory for SQLite and set permissions
+RUN mkdir -p /app/data && \
+    chmod +x /app/app && \
+    chown -R appuser:appuser /app
 
 # Use the non-root user
 USER appuser
