@@ -49,14 +49,20 @@ func main() {
 	}
 	defer queueManager.Close()
 
-	// Create batch-capable Telegram handler only if token is provided
+	// Create batch-capable Telegram handler only if token is provided and valid
 	var handler *telegram.BatchHandler
 	if cfg.TelegramToken != "" {
-		handler, err = telegram.NewBatchHandler(cfg.TelegramToken, llmClient, sheetsClient, queueManager)
-		if err != nil {
-			log.Fatal().Err(err).Msg("Failed to create Telegram handler")
+		// Validate the token before attempting to create the handler
+		if err := telegram.ValidateTelegramToken(cfg.TelegramToken); err != nil {
+			log.Warn().Err(err).Msg("Telegram token validation failed - running in web-only mode")
+		} else {
+			handler, err = telegram.NewBatchHandler(cfg.TelegramToken, llmClient, sheetsClient, queueManager)
+			if err != nil {
+				log.Warn().Err(err).Msg("Failed to create Telegram handler - running in web-only mode")
+			} else {
+				log.Info().Msg("Telegram handler initialized successfully")
+			}
 		}
-		log.Info().Msg("Telegram handler initialized")
 	} else {
 		log.Info().Msg("Telegram token not provided - running in web-only mode")
 	}

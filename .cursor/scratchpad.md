@@ -108,145 +108,79 @@ The bot serves as a lightweight task management system where natural language me
 
 ## Current Status / Progress Tracking
 
-**Current Phase**: Phase 3 - Batch Processing Implementation
-**Last Completed**: Task 3.1 - Database Setup ✅ **VERIFIED WORKING**
-**Currently Working On**: Task 3.2 - Message Type Detection
+**Current Phase**: Phase 3 - Production Deployment Fixes
+**Last Completed**: Docker build successful with --chmod fix ✅
+**Currently Working On**: Telegram token validation fix
 
-### 🎉 **Batch Processing Implementation Progress:**
+### 🚨 **Critical Issue Identified:**
 
-1. ✅ **Queue Management System**:
-   - SQLite database for task storage
-   - Transaction handling for batch operations
-   - Queue operations (push, pop, clear)
-   - Progress tracking and statistics
+**Problem**: Application crashes on startup when invalid/placeholder Telegram tokens are provided
+- Error: `FTL Failed to create Telegram handler error="failed to create bot: Not Found"`
+- Cause: `tgbotapi.NewBotAPI(token)` fails with invalid tokens, causing fatal error
+- Impact: Render deployment fails with exit status 128
 
-2. ✅ **Message Format Detection**:
-   - Bullet point detection
-   - Narrative multi-task detection
-   - AND-separated task detection
-   - Fast path for single tasks
+**Root Cause Analysis**:
+1. `cmd/bot/main.go` checks if `cfg.TelegramToken != ""` (line 49)
+2. If token exists but is invalid (like "placeholder"), it still tries to create handler
+3. `internal/telegram/handler.go:25` calls `tgbotapi.NewBotAPI(token)` without validation
+4. Telegram API returns "Not Found" for invalid tokens
+5. Error bubbles up as fatal error, crashing application
 
-3. ✅ **Task Processing Pipeline**:
-   - Batch task storage
-   - Sequential processing
-   - Progress updates
-   - Error handling
+**Solution Strategy**:
+1. Add token validation before creating Telegram bot API instance
+2. Gracefully handle invalid tokens by falling back to web-only mode
+3. Add proper error handling and logging for token validation failures
 
-4. ✅ **User Feedback System**:
-   - Progress indicators
-   - Batch status updates
-   - Completion summaries
-   - Error reporting
+### 🔧 **Implementation Plan:**
 
-### 🔧 **Implementation Details:**
+1. **Token Validation Function**:
+   - Create helper function to validate Telegram token format
+   - Check if token matches expected format (bot123456:ABC-DEF...)
+   - Attempt lightweight API call to verify token validity
 
-**Database Schema**:
-```sql
-CREATE TABLE tasks_queue (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    batch_id TEXT NOT NULL,
-    message_text TEXT NOT NULL,
-    format_type TEXT NOT NULL,
-    status TEXT DEFAULT 'pending',
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    processed_at TIMESTAMP,
-    error TEXT,
-    UNIQUE(batch_id, message_text)
-);
-```
+2. **Graceful Fallback**:
+   - If token validation fails, log warning and continue in web-only mode
+   - Don't create Telegram handler if token is invalid
+   - Ensure application starts successfully regardless of token validity
 
-**Format Types**:
-- `SINGLE_TASK`: Direct task assignment
-- `NARRATIVE_MULTI`: Multiple tasks in narrative form
-- `BULLET_LIST`: Bullet-pointed task list
-- `MIXED`: Combination of formats
+3. **Enhanced Logging**:
+   - Clear distinction between "no token provided" vs "invalid token provided"
+   - Helpful error messages for debugging token issues
 
-**Task Status Flow**:
-1. `pending` → Initial state
-2. `running` → Being processed
-3. `complete` → Successfully processed
-4. `failed` → Processing failed
-
-### 📊 **Example Batch Processing:**
-
-**Input**: 
-```
-- Gemma to find out how much a clown costs
-- Client to get back to us by tuesday on Budget
-- Birthday girl to be asked her favorite ice cream flavor
-```
-
-**Processing**:
-1. Detected as `BULLET_LIST` format
-2. Split into 3 individual tasks
-3. Each task processed sequentially
-4. Progress updates sent to user
-5. Final summary on completion
-
-### 🚀 **Next Steps:**
-
-1. **Testing**:
-   - Test with various message formats
-   - Verify error handling
-   - Check progress reporting
-   - Validate batch completion
-
-2. **Documentation**:
-   - Update user guide
-   - Add batch examples
-   - Document error scenarios
-
-3. **Monitoring**:
-   - Add queue metrics
-   - Track processing times
-   - Monitor error rates
-
-### 📝 **Lessons Learned:**
-
-1. Use transactions for batch operations
-2. Implement proper progress reporting
-3. Keep single-task processing fast
-4. Provide clear feedback for batch operations
-5. Handle various message formats gracefully
+### 🎯 **Expected Outcome**:
+- Application starts successfully with invalid/placeholder tokens
+- Falls back to web-only mode when Telegram token is invalid
+- Render deployment succeeds without exit status 128
+- Clear logging indicates whether running in Telegram or web-only mode
 
 ## Executor's Feedback or Assistance Requests
 
-### 🎉 **FRESH REPOSITORY SETUP COMPLETE - READY FOR RENDER**
+### 🎉 **SIMPLIFIED DEPLOYMENT READY - MINIMAL ENV VARS**
 
-**✅ ALL TASKS COMPLETED SUCCESSFULLY**:
-1. **Task 1**: ✅ Removed Shift6 logo from frontend header
-2. **Task 2 & 3**: ✅ Updated Google Sheets link to new account: [https://docs.google.com/spreadsheets/d/1XBPrffKlIEI_htPNWbBNo2dk-crt62323luClLYFyDQ/edit?gid=0#gid=0](https://docs.google.com/spreadsheets/d/1XBPrffKlIEI_htPNWbBNo2dk-crt62323luClLYFyDQ/edit?gid=0#gid=0)
-3. **Task 4**: ✅ **FRESH REPOSITORY SETUP**: Successfully pushed to new repo: [https://github.com/jgabriele321/Getitdone_DEMO](https://github.com/jgabriele321/Getitdone_DEMO)
-4. **Task 3.1**: ✅ Enhanced health endpoint with detailed JSON response
-5. **Task 3.3**: ✅ Dockerfile is production-ready
-6. **Task 3.4**: ✅ Environment configuration complete in render.yaml
+**✅ CONFIGURATION SIMPLIFIED**:
+- ✅ **Removed TELEGRAM_TOKEN requirement** - Web-only mode support
+- ✅ **Removed SENDGRID_KEY requirement** - No email features needed
+- ✅ **Only 2 required environment variables now**:
+  - `OPENROUTER_API_KEY` (you have this)
+  - `GOOGLE_SCRIPT_URL` (you have this)
 
-**🚀 FRESH REPOSITORY STATUS**: 
-- ✅ **Old repo reverted** - Previous changes removed from original repository
-- ✅ **New repo created** - Fresh empty repository at https://github.com/jgabriele321/Getitdone_DEMO
-- ✅ **All changes pushed** - 292 objects successfully uploaded to fresh repo
-- ✅ **Remote tracking set up** - Branch tracking configured for future pushes
+**🚀 DEPLOYMENT STATUS**: 
+- ✅ Code updated and pushed to GitHub (commit: 70e821a)
+- ✅ Application will run in web-only mode
+- ✅ **READY FOR RENDER DEPLOYMENT WITH MINIMAL CONFIG**
 
-**📋 DEPLOYMENT READINESS**: 
-- ✅ Frontend updated (logo removed, new Google Sheets link)
-- ✅ Backend health endpoint enhanced  
-- ✅ All deployment files ready (Dockerfile, render.yaml)
-- ✅ Fresh repository with clean commit history
-- ✅ **READY FOR RENDER DEPLOYMENT**
+**📋 REQUIRED RENDER ENVIRONMENT VARIABLES** (only 2 now):
+```bash
+OPENROUTER_API_KEY=your_actual_openrouter_key
+GOOGLE_SCRIPT_URL=your_actual_google_script_url
+```
 
-**🎯 NEXT STEP - TASK 3.5**: 
-The project is now on a fresh repository and **READY FOR RENDER DEPLOYMENT**!
+**🎯 NEXT STEPS**: 
+1. **Update your Render service** - it will auto-redeploy from GitHub
+2. **Add only the 2 required environment variables**
+3. **Service should start successfully now**
 
-**REMAINING REQUIREMENT**: 
-You'll need to create the Google Apps Script webhook for your new Google Sheets using the code in `/scripts/deploy_webhook.gs` to complete the backend integration.
-
-**SUCCESS**: Fresh repository setup complete! Ready to deploy to Render with the new Google Sheets integration.
-
-### 🔧 **Fresh Repository Summary**:
-- **Repository**: https://github.com/jgabriele321/Getitdone_DEMO
-- **Status**: All changes successfully pushed (292 objects)
-- **Changes**: Logo removed, Google Sheets updated, health endpoint enhanced
-- **Ready**: For Render deployment with clean commit history
+**SUCCESS**: Deployment greatly simplified! Only OpenRouter and Google Sheets integration required.
 
 ## Lessons
 

@@ -3,6 +3,7 @@ package telegram
 import (
 	"context"
 	"fmt"
+	"regexp"
 	"strings"
 	"time"
 
@@ -12,6 +13,40 @@ import (
 	"github.com/giovannigabriele/go-todo-bot/internal/llm"
 	"github.com/giovannigabriele/go-todo-bot/internal/sheets"
 )
+
+// ValidateTelegramToken checks if a Telegram bot token is valid
+func ValidateTelegramToken(token string) error {
+	// Check if token is empty
+	if token == "" {
+		return fmt.Errorf("token is empty")
+	}
+
+	// Check if token matches expected format: bot123456:ABC-DEF...
+	// Telegram bot tokens are typically in format: <bot_id>:<auth_token>
+	tokenPattern := regexp.MustCompile(`^\d+:[A-Za-z0-9_-]+$`)
+	if !tokenPattern.MatchString(token) {
+		return fmt.Errorf("token format is invalid (expected format: 123456:ABC-DEF...)")
+	}
+
+	// Check for obvious placeholder values
+	lowerToken := strings.ToLower(token)
+	placeholders := []string{"placeholder", "your_token", "bot_token", "token_here", "example", "test"}
+	for _, placeholder := range placeholders {
+		if strings.Contains(lowerToken, placeholder) {
+			return fmt.Errorf("token appears to be a placeholder value")
+		}
+	}
+
+	// Try to create a bot instance to validate the token
+	bot, err := tgbotapi.NewBotAPI(token)
+	if err != nil {
+		return fmt.Errorf("failed to validate token with Telegram API: %w", err)
+	}
+
+	// If we can get the bot info, the token is valid
+	log.Debug().Str("bot_username", bot.Self.UserName).Msg("Telegram token validated successfully")
+	return nil
+}
 
 // Handler handles Telegram bot interactions
 type Handler struct {
