@@ -38,16 +38,14 @@ RUN adduser -D -s /bin/sh appuser
 # Set the working directory
 WORKDIR /app
 
-# Copy the binary from builder
-COPY --from=builder /build/app ./app
+# Copy the binary from builder and make it executable
+COPY --from=builder --chmod=0755 /build/app ./app
 
 # Copy the environment example file
 COPY env.example .env.example
 
-# Create data directory for SQLite and set permissions
+# Create data directory for SQLite and set ownership
 RUN mkdir -p /app/data && \
-    ls -la /app && \
-    chmod +x /app/app && \
     chown -R appuser:appuser /app
 
 # Use the non-root user
