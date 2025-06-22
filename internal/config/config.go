@@ -45,10 +45,10 @@ func Load() (*Config, error) {
 	}
 
 	cfg := &Config{
-		TelegramToken:    getEnvRequired("TELEGRAM_TOKEN"),
+		TelegramToken:    getEnv("TELEGRAM_TOKEN", ""),
 		OpenRouterAPIKey: getEnvRequired("OPENROUTER_API_KEY"),
 		GoogleScriptURL:  getEnvRequired("GOOGLE_SCRIPT_URL"),
-		SendGridKey:      getEnvRequired("SENDGRID_KEY"),
+		SendGridKey:      getEnv("SENDGRID_KEY", ""),
 		AdminTelegramID:  getEnv("ADMIN_TELEGRAM_ID", "@defibeats"),
 		TestMode:         getEnvBool("TEST_MODE", false),
 		TestEmail:        getEnv("TEST_EMAIL", ""),
@@ -75,18 +75,13 @@ func Load() (*Config, error) {
 
 // validate checks that all required configuration is present
 func (c *Config) validate() error {
-	if c.TelegramToken == "" {
-		return fmt.Errorf("TELEGRAM_TOKEN is required")
-	}
 	if c.OpenRouterAPIKey == "" {
 		return fmt.Errorf("OPENROUTER_API_KEY is required")
 	}
 	if c.GoogleScriptURL == "" {
 		return fmt.Errorf("GOOGLE_SCRIPT_URL is required")
 	}
-	if c.SendGridKey == "" {
-		return fmt.Errorf("SENDGRID_KEY is required")
-	}
+	// TELEGRAM_TOKEN and SENDGRID_KEY are now optional
 	if c.TestMode && c.TestEmail == "" {
 		return fmt.Errorf("TEST_EMAIL is required when TEST_MODE is enabled")
 	}

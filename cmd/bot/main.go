@@ -49,10 +49,16 @@ func main() {
 	}
 	defer queueManager.Close()
 
-	// Create batch-capable Telegram handler
-	handler, err := telegram.NewBatchHandler(cfg.TelegramToken, llmClient, sheetsClient, queueManager)
-	if err != nil {
-		log.Fatal().Err(err).Msg("Failed to create Telegram handler")
+	// Create batch-capable Telegram handler only if token is provided
+	var handler *telegram.BatchHandler
+	if cfg.TelegramToken != "" {
+		handler, err = telegram.NewBatchHandler(cfg.TelegramToken, llmClient, sheetsClient, queueManager)
+		if err != nil {
+			log.Fatal().Err(err).Msg("Failed to create Telegram handler")
+		}
+		log.Info().Msg("Telegram handler initialized")
+	} else {
+		log.Info().Msg("Telegram token not provided - running in web-only mode")
 	}
 
 	// Create context that can be cancelled
@@ -90,10 +96,16 @@ func main() {
 		cancel()
 	}()
 
-	// Start the bot
-	log.Info().Msg("Starting TODO bot...")
-	if err := handler.Start(ctx); err != nil && err != context.Canceled {
-		log.Fatal().Err(err).Msg("Bot error")
+	// Start the bot only if handler exists
+	if handler != nil {
+		log.Info().Msg("Starting TODO bot...")
+		if err := handler.Start(ctx); err != nil && err != context.Canceled {
+			log.Fatal().Err(err).Msg("Bot error")
+		}
+	} else {
+		log.Info().Msg("Running in web-only mode - Telegram bot disabled")
+		// Keep the service running for web requests
+		<-ctx.Done()
 	}
 
 	log.Info().Msg("Bot shutdown complete")
