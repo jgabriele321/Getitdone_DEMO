@@ -12,6 +12,7 @@ import (
 	"github.com/rs/zerolog/log"
 
 	"github.com/giovannigabriele/go-todo-bot/internal/config"
+	"github.com/giovannigabriele/go-todo-bot/internal/health"
 	"github.com/giovannigabriele/go-todo-bot/internal/llm"
 	"github.com/giovannigabriele/go-todo-bot/internal/queue"
 	"github.com/giovannigabriele/go-todo-bot/internal/sheets"
@@ -65,10 +66,7 @@ func main() {
 	// Start health check server
 	go func() {
 		mux := http.NewServeMux()
-		mux.HandleFunc("/healthz", func(w http.ResponseWriter, r *http.Request) {
-			w.WriteHeader(http.StatusOK)
-			w.Write([]byte("OK"))
-		})
+		mux.HandleFunc("/healthz", health.Handler())
 
 		port := os.Getenv("PORT")
 		if port == "" {

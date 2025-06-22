@@ -1,7 +1,6 @@
 "use client"
 
 import type React from "react"
-import Image from "next/image"
 import { useState } from "react"
 import { Button } from "../components/ui/button"
 import { Textarea } from "../components/ui/textarea"
@@ -93,7 +92,6 @@ export default function ChatPage() {
       {/* Header */}
       <header className="flex items-center justify-between p-4 md:p-7 border-b border-gray-100">
         <div className="flex items-center gap-4">
-          <Image src="/logo-black.svg" alt="Shift6 Studios" width={44} height={44} className="h-9 md:h-11" />
           <h1 className="text-xl md:text-3xl font-bold tracking-tight">Productivity Hub</h1>
         </div>
 
@@ -124,7 +122,7 @@ export default function ChatPage() {
           <div className="text-center space-y-4">
             <h2 className="text-4xl md:text-5xl font-black tracking-tight">Task Manager</h2>
             <a
-              href="https://docs.google.com/spreadsheets/d/1xq52BtoOmUIFiZ3BR_v5_Bay7jQSi5qZsT9a0pLvKBA/edit?gid=94316419#gid=94316419"
+              href="https://docs.google.com/spreadsheets/d/1XBPrffKlIEI_htPNWbBNo2dk-crt62323luClLYFyDQ/edit?gid=0#gid=0"
               target="_blank"
               rel="noopener noreferrer"
               className="text-xl md:text-2xl text-black hover:text-gray-600 underline transition-colors"
